@@ -67,6 +67,6 @@ Para essa entrega parcial, foram utilizados os seguintes periféricos:
 
 ---
 
-- **Vídeo de Demonstração:** [YouTube]([https://youtu.be/rabuv1qz6OA](https://youtu.be/7B6Rz4DQe1w))
+- **Vídeo de Demonstração:** [YouTube](https://youtu.be/7B6Rz4DQe1w)
   
 ---
