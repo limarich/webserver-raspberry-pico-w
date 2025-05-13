@@ -34,6 +34,7 @@ float dht11_read_temperature()
 // Lê ambos temperatura e umidade do sensor DHT11
 int dht11_read(float *temperature, float *humidity)
 {
+    adc_select_input(DHT11_ADC_CHANNEL);
     if (temperature == NULL || humidity == NULL)
         return 0;
 
