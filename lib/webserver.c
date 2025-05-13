@@ -47,7 +47,7 @@ void webserver_init(void)
 static err_t tcp_sent_callback(void *arg, struct tcp_pcb *tpcb, u16_t len)
 {
     printf("Dados enviados com sucesso!\n");
-    tcp_close(tpcb);
+    tcp_close(tpcb); // fecha a conexão após o envio da resposta
     return ERR_OK;
 }
 
@@ -55,7 +55,7 @@ static err_t tcp_sent_callback(void *arg, struct tcp_pcb *tpcb, u16_t len)
 static err_t tcp_server_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
     printf("Conexão TCP aceita\n");
-    tcp_recv(newpcb, tcp_server_recv);
+    tcp_recv(newpcb, tcp_server_recv);   // callback para montar a página html
     tcp_sent(newpcb, tcp_sent_callback); // callback para envio
     return ERR_OK;
 }
@@ -93,11 +93,13 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
     // Cria a resposta HTML
     char html[1024 * 2];
 
+    // textos dos botões
     const char *blue_led_button_text = blue_led_state ? "Desligar Led Azul" : "Ativar Led Azul";
     const char *green_led_button_text = green_led_state ? "Desligar Led Verde" : "Ativar Led Verde";
     const char *red_led_button_text = red_led_state ? "Desligar Led Vermelho" : "Ativar Led Vermelho";
     const char *alarm_button_text = is_alarm_enabled ? "Desativar Alarme" : "Ativar Alarme";
 
+    // página html
     snprintf(html, sizeof(html),
              "HTTP/1.1 200 OK\r\n"
              "Content-Type: text/html\r\n"
@@ -135,7 +137,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
 
     // Envia a resposta
     err_t send_err = tcp_write(tpcb, html, strlen(html), TCP_WRITE_FLAG_COPY);
-    if (send_err != ERR_OK)
+    if (send_err != ERR_OK) // caso ocorra um erro ao gravar a página exibe mensagem, libera memória alocada e aborta a conexão
     {
         printf("Erro ao enviar resposta: %d\n", send_err);
         free(request);
@@ -153,23 +155,10 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
     return ERR_OK;
 }
 
-int send_http_response(struct tcp_pcb *tpcb, const char *response)
-{
-    err_t err = tcp_write(tpcb, response, strlen(response), TCP_WRITE_FLAG_COPY);
-    if (err != ERR_OK)
-    {
-        printf("Erro ao enviar resposta: %d\n", err);
-        tcp_abort(tpcb);
-        return ERR_ABRT;
-    }
-
-    tcp_output(tpcb);
-    return ERR_OK;
-}
-
 // Tratamento do request do usuário
 void user_request(struct tcp_pcb *tpcb, char **request)
 {
+    // definição das rotas do sistema
     if (strstr(*request, "GET /toggle_blue") != NULL)
     {
         blue_led_state = !blue_led_state;

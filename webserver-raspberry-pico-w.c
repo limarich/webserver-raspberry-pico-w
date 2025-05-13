@@ -18,6 +18,7 @@
 #define BUZZER_A 10          // PORTA DO BUZZER A
 #define BUZZER_B 21          // PORTA DO BUZZER B
 #define BUZZER_FREQUENCY 200 // FREQUENCIA DO BUZZER
+#define DHT11_PIN 28         // Pino do sensor DHT11
 
 // Definição dos pinos dos LEDs
 #define LED_PIN CYW43_WL_GPIO_LED_PIN // GPIO do CI CYW43
@@ -57,9 +58,9 @@ int main()
     gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL, true, &gpio_irq_handler);
 
     // inicializa os leds
-    init_led(LED_BLUE_PIN);
-    init_led(LED_RED_PIN);
-    init_led(LED_GREEN_PIN);
+    init_led(LED_BLUE_PIN);  // led azul
+    init_led(LED_RED_PIN);   // led vermelho
+    init_led(LED_GREEN_PIN); // led verde
 
     // inicializa o sistema de entrada e saída padrão
     stdio_init_all();
@@ -69,9 +70,9 @@ int main()
     webserver_init();
     // Inicializa o conversor ADC
     adc_init();
-    adc_set_temp_sensor_enabled(true);
-    // inicializa o sensor
-    dht11_init(28);
+    adc_set_temp_sensor_enabled(true); // habilita o sensor de temperatura
+    // inicializa a porta do sensor dht11
+    dht11_init(DHT11_PIN);
     // INCIALIZA OS BUZZERS
     initialization_buzzers(BUZZER_A, BUZZER_B);
 
