@@ -12,8 +12,12 @@
 #include "lib/wifi.h"
 #include "lib/webserver.h"
 #include "lib/dht11.h"
+#include "lib/buzzer.h"
 
-#define BUTTON_B 6 // botão B
+#define BUTTON_B 6           // botão B
+#define BUZZER_A 10          // PORTA DO BUZZER A
+#define BUZZER_B 21          // PORTA DO BUZZER B
+#define BUZZER_FREQUENCY 200 // FREQUENCIA DO BUZZER
 
 // Definição dos pinos dos LEDs
 #define LED_PIN CYW43_WL_GPIO_LED_PIN // GPIO do CI CYW43
@@ -56,6 +60,9 @@ int main()
     adc_init();
     adc_set_temp_sensor_enabled(true);
 
+    // INCIALIZA OS BUZZERS
+    initialization_buzzers(BUZZER_A, BUZZER_B);
+
     float temperature = 0;
     float humidity = 0;
     while (true)
@@ -71,6 +78,9 @@ int main()
         {
             printf("Erro ao ler o sensor DHT11\n");
         }
+
+        buzzer_pwm(BUZZER_A, BUZZER_FREQUENCY, 100);
+        sleep_ms(200);
     }
 
     // Desligar a arquitetura CYW43.
