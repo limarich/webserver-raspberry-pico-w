@@ -1,3 +1,9 @@
+cmake_minimum_required(VERSION 3.13)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 
 include(pico_sdk_import.cmake)
@@ -5,7 +11,6 @@ include(pico_sdk_import.cmake)
 project(webserver-raspberry-pico-w C CXX ASM)
 
 pico_sdk_init()
-
 
 add_executable(${PROJECT_NAME} webserver-raspberry-pico-w.c lib/wifi.c lib/webserver.c lib/dht11.c lib/buzzer.c)
 
