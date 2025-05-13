@@ -9,12 +9,12 @@
 #include "lwip/netif.h" // Lightweight IP stack - fornece funções e estruturas para trabalhar com interfaces de rede (netif)
 
 // bibliotecas customizadas
-#include "lib/wifi.h"
-#include "lib/webserver.h"
-#include "lib/dht11.h"
-#include "lib/buzzer.h"
+#include "lib/wifi.h"      // configuração da conexão com wifi
+#include "lib/webserver.h" // configuração do webserver
+#include "lib/dht11.h"     // leitura do sensor dht11
+#include "lib/buzzer.h"    // controle do buzzer
 
-#define BUTTON_B 6           // botão B
+#define BUTTON_B 6           // botão B para o modo bootsel
 #define BUZZER_A 10          // PORTA DO BUZZER A
 #define BUZZER_B 21          // PORTA DO BUZZER B
 #define BUZZER_FREQUENCY 200 // FREQUENCIA DO BUZZER
@@ -24,6 +24,13 @@
 #define LED_BLUE_PIN 12               // GPIO12 - LED azul
 #define LED_GREEN_PIN 11              // GPIO11 - LED verde
 #define LED_RED_PIN 13                // GPIO13 - LED vermelho
+
+#define DHTPIN 28 // PINO do sensor de umidade e temperatura
+
+volatile bool is_alarm_enabled = false; // variável global para o controle do alarme
+// variável global para a leitura de temperatura e umidade do sensor
+volatile float dht_temperature = 0;
+volatile float dht_humidity = 0;
 
 // inicializa um led
 void init_led(uint pin);
@@ -53,34 +60,35 @@ int main()
     wifi_init();
     // incializar o webserver
     webserver_init();
-    // inicializa o sensor
-    dht11_init(28);
-
     // Inicializa o conversor ADC
     adc_init();
     adc_set_temp_sensor_enabled(true);
-
+    // inicializa o sensor
+    dht11_init(28);
     // INCIALIZA OS BUZZERS
     initialization_buzzers(BUZZER_A, BUZZER_B);
 
-    float temperature = 0;
-    float humidity = 0;
     while (true)
     {
         wifi_poll();   // Mantém a conexão Wi-Fi ativa
         sleep_ms(100); // Reduz o uso da CPU
 
-        if (dht11_read(&temperature, &humidity))
+        // em caso de leitura, exibe a informação
+        // caso a leitura do sensor retorne 0, ocorreu algum erro
+        if (dht11_read(&dht_temperature, &dht_humidity))
         {
-            printf("Temperatura: %.2f°C, Umidade: %.2f%%\n", temperature, humidity);
+            printf("Temperatura: %.2f°C, Umidade: %.2f%%\n", dht_temperature, dht_humidity);
         }
         else
         {
             printf("Erro ao ler o sensor DHT11\n");
         }
 
-        buzzer_pwm(BUZZER_A, BUZZER_FREQUENCY, 100);
-        sleep_ms(200);
+        if (is_alarm_enabled) // alarme
+        {
+            buzzer_pwm(BUZZER_A, BUZZER_FREQUENCY, 100);
+            sleep_ms(200);
+        }
     }
 
     // Desligar a arquitetura CYW43.
