@@ -31,9 +31,16 @@ volatile bool is_alarm_enabled = false; // variável global para o controle do a
 // variável global para a leitura de temperatura e umidade do sensor
 volatile float dht_temperature = 0;
 volatile float dht_humidity = 0;
+volatile float internal_temperature = 0;
+// controle dos leds
+volatile bool green_led_state = false;
+volatile bool blue_led_state = false;
+volatile bool red_led_state = false;
 
 // inicializa um led
 void init_led(uint pin);
+// Leitura da temperatura interna
+float internal_temp_read(void);
 
 void gpio_irq_handler(uint gpio, uint32_t events)
 {
@@ -84,6 +91,9 @@ int main()
             printf("Erro ao ler o sensor DHT11\n");
         }
 
+        // le a temperatura interna
+        internal_temp_read();
+
         if (is_alarm_enabled) // alarme
         {
             buzzer_pwm(BUZZER_A, BUZZER_FREQUENCY, 100);
@@ -102,4 +112,13 @@ void init_led(uint pin)
     gpio_init(pin);
     gpio_set_dir(pin, GPIO_OUT);
     gpio_put(pin, false);
+}
+
+// Leitura da temperatura interna
+float internal_temp_read(void)
+{
+    adc_select_input(4);
+    uint16_t raw_value = adc_read();
+    const float conversion_factor = 3.3f / (1 << 12);
+    internal_temperature = 27.0f - ((raw_value * conversion_factor) - 0.706f) / 0.001721f;
 }
