@@ -52,6 +52,9 @@ volatile float dht_temperature = 0;
 volatile float dht_humidity = 0;
 volatile float internal_temperature = 0;
 
+// limite para temperatura máxima do sistema
+volatile float temperature_limit = 25;
+
 // Estado dos LEDs
 volatile bool green_led_state = false;
 volatile bool blue_led_state = false;
@@ -76,6 +79,8 @@ display_mode_t display_mode = SENSOR;
 void init_led(uint pin);
 // Leitura da temperatura interna
 float internal_temp_read(void);
+// faz leituras médias do sensor para evitar possíveis flutuações
+float read_dht11_average(float *temperature, float *humidity);
 
 // Manipula as interrupções dos botões
 void gpio_irq_handler(uint gpio, uint32_t events)
@@ -150,9 +155,14 @@ int main()
 
         // em caso de leitura, exibe a informação
         // caso a leitura do sensor retorne 0, ocorreu algum erro
-        if (dht11_read(&dht_temperature, &dht_humidity))
+        float avg_temperature = 0, avg_humidity = 0;
+        int num_valid_reads = read_dht11_average(&avg_temperature, &avg_humidity);
+
+        if (num_valid_reads > 0)
         {
-            printf("Temperatura: %.2f°C, Umidade: %.2f%%\n", dht_temperature, dht_humidity);
+            dht_temperature = avg_temperature;
+            dht_humidity = avg_humidity;
+            printf("Temperatura Média: %.2f°C, Umidade Média: %.2f%%\n", dht_temperature, dht_humidity);
         }
         else
         {
@@ -165,8 +175,24 @@ int main()
         // limpa a tela do display
         ssd1306_fill(&ssd, false);
 
-        // caso o alarme esteja ativado pisca a tela do display e ativa o buzzer para um toque curto
-        if (is_alarm_enabled)
+        if (dht_temperature > temperature_limit) // verifica antes se o limite da temperatura nao foi atingido
+        {
+            char temperature[16];
+            // formata dados lidos pelo sensor para exibição
+            snprintf(temperature, sizeof(temperature), "%.2f°C", dht_temperature);
+
+            ssd1306_fill(&ssd, false);                                             // Limpa a tela
+            ssd1306_send_data(&ssd);                                               // envia dados para display
+            ssd1306_draw_string(&ssd, "SISTEMA", 0, 11);                           // Desenha uma string
+            ssd1306_draw_string(&ssd, "SUPERAQUECIDO", 0, 20);                     // Desenha uma string
+            ssd1306_draw_string(&ssd, temperature, WIDTH / 2 - 4, HEIGHT / 2 + 4); // Desenha uma string
+            ssd1306_send_data(&ssd);                                               // envia dados para display
+            buzzer_pwm(BUZZER_A, BUZZER_FREQUENCY * 10, 50);
+            sleep_ms(250);
+            buzzer_pwm(BUZZER_A, BUZZER_FREQUENCY * 5, 50);
+            sleep_ms(250);
+        }
+        else if (is_alarm_enabled) // caso o alarme esteja ativado pisca a tela do display e ativa o buzzer para um toque curto
         {
             buzzer_pwm(BUZZER_A, BUZZER_FREQUENCY, 100);
             ssd1306_fill(&ssd, true);  // Preenche a tela
@@ -260,4 +286,43 @@ float internal_temp_read(void)
     const float conversion_factor = 3.3f / (1 << 12); // Converte para tensão (0-3.3V)
     internal_temperature = 27.0f - ((raw_value * conversion_factor) - 0.706f) / 0.001721f;
     return internal_temperature;
+}
+
+// faz leituras médias do sensor para evitar possíveis flutuações
+float read_dht11_average(float *temperature, float *humidity)
+{
+    float temp_sum = 0;
+    float hum_sum = 0;
+    int valid_reads = 0;
+
+    for (int i = 0; i < 50; ++i)
+    {
+        float temp, hum;
+        if (dht11_read(&temp, &hum))
+        {
+            temp_sum += temp;
+            hum_sum += hum;
+            valid_reads++;
+        }
+        else
+        {
+            // Se a leitura falhar, espera um pouco antes de tentar novamente
+            sleep_ms(50);
+        }
+    }
+
+    // Evita divisão por zero caso todas as leituras falhem
+    if (valid_reads > 0)
+    {
+        *temperature = temp_sum / valid_reads;
+        *humidity = hum_sum / valid_reads;
+    }
+    else
+    {
+        // Em caso de erro em todas as leituras, retorna -1 para indicar falha
+        *temperature = -1;
+        *humidity = -1;
+    }
+
+    return valid_reads;
 }
