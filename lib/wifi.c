@@ -43,3 +43,40 @@ void wifi_disconnect(void)
     // Desconecta e desliga o Wi-Fi
     cyw43_arch_deinit();
 }
+
+wifi_info_t wifi_get_info(void)
+{
+    wifi_info_t info;
+    memset(&info, 0, sizeof(info)); // Zera a estrutura
+
+    // Obtém o SSID da rede conectada
+    strncpy(info.ssid, WIFI_SSID, sizeof(info.ssid) - 1);
+
+    // Obtém a qualidade do sinal
+    int8_t rssi = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+    if (rssi != CYW43_LINK_DOWN)
+    {
+        // Usa o valor bruto do RSSI em dBm
+        info.signal_quality = rssi;
+    }
+    else
+    {
+        // Define -100 dBm como sem sinal
+        info.signal_quality = -100;
+    }
+
+    // Obtém o canal atual (simulado)
+    info.channel = 11; // Aqui você pode usar outra função se disponível para pegar o canal real
+
+    // Obtém o endereço IP
+    if (netif_default)
+    {
+        snprintf(info.ip_address, sizeof(info.ip_address), "%s", ipaddr_ntoa(&netif_default->ip_addr));
+    }
+    else
+    {
+        strcpy(info.ip_address, "0.0.0.0");
+    }
+
+    return info;
+}
