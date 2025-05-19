@@ -243,7 +243,7 @@ int main()
             snprintf(ssid, sizeof(ssid), "%s", wifi_info.ssid);
             snprintf(signal, sizeof(signal), "%dDB", wifi_info.signal_quality);
             snprintf(channel, sizeof(channel), "%d", wifi_info.channel);
-            snprintf(ip, sizeof(ip), "%s", "192.168.0.54");
+            snprintf(ip, sizeof(ip), "%s", wifi_info.ip_address);
 
             ssd1306_fill(&ssd, false); // Limpa a tela
 
