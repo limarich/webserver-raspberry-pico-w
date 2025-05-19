@@ -1,6 +1,6 @@
 #include "ssd1306.h"
 #include "font.h"
-
+// inicializa o display SSD1306
 void ssd1306_init(ssd1306_t *ssd, uint8_t width, uint8_t height, bool external_vcc, uint8_t address, i2c_inst_t *i2c)
 {
     ssd->width = width;
@@ -13,7 +13,7 @@ void ssd1306_init(ssd1306_t *ssd, uint8_t width, uint8_t height, bool external_v
     ssd->ram_buffer[0] = 0x40;
     ssd->port_buffer[0] = 0x80;
 }
-
+// configura o display SSD1306
 void ssd1306_config(ssd1306_t *ssd)
 {
     ssd1306_command(ssd, SET_DISP | 0x00);
@@ -43,6 +43,7 @@ void ssd1306_config(ssd1306_t *ssd)
     ssd1306_command(ssd, SET_DISP | 0x01);
 }
 
+// envia um comando para o display SSD1306
 void ssd1306_command(ssd1306_t *ssd, uint8_t command)
 {
     ssd->port_buffer[1] = command;
@@ -53,7 +54,7 @@ void ssd1306_command(ssd1306_t *ssd, uint8_t command)
         2,
         false);
 }
-
+// envia os dados para o display SSD1306
 void ssd1306_send_data(ssd1306_t *ssd)
 {
     ssd1306_command(ssd, SET_COL_ADDR);
@@ -70,6 +71,7 @@ void ssd1306_send_data(ssd1306_t *ssd)
         false);
 }
 
+// desenha um pixel no display SSD1306
 void ssd1306_pixel(ssd1306_t *ssd, uint8_t x, uint8_t y, bool value)
 {
     uint16_t index = (y >> 3) + (x << 3) + 1;
@@ -86,7 +88,7 @@ void ssd1306_fill(ssd1306_t *ssd, bool value) {
   for (uint8_t i = 1; i < ssd->bufsize; ++i)
     ssd->ram_buffer[i] = byte;
 }*/
-
+// preenche o display SSD1306 com um valor (true ou false)
 void ssd1306_fill(ssd1306_t *ssd, bool value)
 {
     // Itera por todas as posições do display
@@ -98,7 +100,7 @@ void ssd1306_fill(ssd1306_t *ssd, bool value)
         }
     }
 }
-
+// desenha um retângulo no display SSD1306
 void ssd1306_rect(ssd1306_t *ssd, uint8_t top, uint8_t left, uint8_t width, uint8_t height, bool value, bool fill)
 {
     for (uint8_t x = left; x < left + width; ++x)
@@ -182,7 +184,7 @@ void ssd1306_circle(ssd1306_t *ssd, uint8_t x0, uint8_t y0, uint8_t radius, bool
         }
     }
 }
-
+// desenha uma linha entre dois pontos
 void ssd1306_line(ssd1306_t *ssd, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, bool value)
 {
     int dx = abs(x1 - x0);
@@ -215,13 +217,13 @@ void ssd1306_line(ssd1306_t *ssd, uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1
         }
     }
 }
-
+// desenha linha horizontal
 void ssd1306_hline(ssd1306_t *ssd, uint8_t x0, uint8_t x1, uint8_t y, bool value)
 {
     for (uint8_t x = x0; x <= x1; ++x)
         ssd1306_pixel(ssd, x, y, value);
 }
-
+// desenha linha vertical
 void ssd1306_vline(ssd1306_t *ssd, uint8_t x, uint8_t y0, uint8_t y1, bool value)
 {
     for (uint8_t y = y0; y <= y1; ++y)
