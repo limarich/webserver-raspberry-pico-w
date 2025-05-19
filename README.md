@@ -75,6 +75,6 @@ Foram utilizados os seguintes periféricos:
 
 ---
 
-- **Vídeo de Demonstração:** [YouTube](https://youtu.be/7B6Rz4DQe1w)
+- **Vídeo de Demonstração:** [[YouTube](https://youtu.be/7B6Rz4DQe1w)](https://youtu.be/2jItLws7qHA?si=ZoJ9htPo5tCIxKky)
   
 ---
